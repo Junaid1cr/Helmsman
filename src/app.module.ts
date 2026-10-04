@@ -6,6 +6,7 @@ import { DeployerModule } from './deployer/deployer.module';
 import { FreezeModule } from './freeze/freeze.module';
 import { InsightsModule } from './insights/insights.module';
 import { TriggerModule } from './trigger/trigger.module';
+import { WebhookModule } from './webhook/webhook.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { TriggerModule } from './trigger/trigger.module';
     FreezeModule,
     InsightsModule,
     TriggerModule,
+    WebhookModule,
   ],
 })
 export class AppModule {}

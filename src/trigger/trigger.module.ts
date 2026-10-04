@@ -10,5 +10,6 @@ import { TriggerController } from './trigger.controller';
   imports: [RulesModule, RunnerModule, StoreModule, DeployerModule],
   providers: [PipelineService],
   controllers: [TriggerController],
+  exports: [PipelineService],
 })
 export class TriggerModule {}
