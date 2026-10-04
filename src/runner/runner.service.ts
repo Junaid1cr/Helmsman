@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { StoreService } from '../store/store.service';
 import type { PipelineEvent } from '../rules/types';
 import { CiRunner } from './ci-runner';
+import type { CiRunResult } from './types';
 import { KubeJobApi } from './k8s';
 
 /**
@@ -30,30 +31,11 @@ export class RunnerService implements OnModuleInit {
     }
   }
 
-  /** Create a queued CI run, kick the Job off in the background, return the id. */
-  startCi(event: PipelineEvent): { runId: string } {
-    const run = this.store.createRun({
-      kind: 'ci',
-      status: 'queued',
-      repo: event.repo,
-      branch: event.branch,
-      commit: event.commit,
-      message: event.message,
-    });
-
-    void this.runner.execute(run.id, event).catch((e) => {
-      this.logger.error(`CI run ${run.id} errored: ${(e as Error).message}`);
-      try {
-        this.store.updateRun(run.id, {
-          status: 'failed',
-          reason: `runner error: ${(e as Error).message}`,
-          finishedAt: new Date().toISOString(),
-        });
-      } catch {
-        /* run may be gone; ignore */
-      }
-    });
-
-    return { runId: run.id };
+  /**
+   * Execute an already-created CI run to completion. The orchestrator creates
+   * the run record, returns its id to the caller, then awaits this to chain CD.
+   */
+  execute(runId: string, event: PipelineEvent): Promise<CiRunResult> {
+    return this.runner.execute(runId, event);
   }
 }

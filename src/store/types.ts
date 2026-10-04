@@ -7,7 +7,8 @@ export type CdStatus =
   | 'deploying'
   | 'deployed'
   | 'rolled_back'
-  | 'blocked';
+  | 'blocked'
+  | 'failed';
 export type RunStatus = CiStatus | CdStatus;
 
 export interface Run {

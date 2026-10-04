@@ -29,11 +29,13 @@ export class MemoryStore implements Store {
   }
 
   listRuns(filter: ListRunsFilter = {}): Run[] {
-    let out = [...this.runs.values()];
+    // Newest first by insertion order (creation order). This is deterministic
+    // even when createdAt timestamps collide at millisecond resolution; the
+    // SQLite store will give the same ordering via rowid.
+    let out = [...this.runs.values()].reverse();
     if (filter.kind) out = out.filter((r) => r.kind === filter.kind);
     if (filter.status) out = out.filter((r) => r.status === filter.status);
     if (filter.branch) out = out.filter((r) => r.branch === filter.branch);
-    out.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
     if (filter.limit !== undefined) out = out.slice(0, filter.limit);
     return out.map((r) => ({ ...r }));
   }

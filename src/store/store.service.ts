@@ -1,14 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { MemoryStore } from './memory-store';
+import { SqliteStore } from './sqlite-store';
 import type { CreateRunInput, ListRunsFilter, Run, RunPatch, Store } from './types';
 
 /**
- * Nest-injectable Store. Delegates to MemoryStore today; at step 6 the backing
- * impl becomes better-sqlite3 — callers depend only on this interface.
+ * Nest-injectable Store, backed by better-sqlite3 for durable run history
+ * (db path via HELMSMAN_DB, default data/helmsman.sqlite). Callers depend only
+ * on the Store interface; MemoryStore remains for unit tests.
  */
 @Injectable()
 export class StoreService implements Store {
-  private readonly impl: Store = new MemoryStore();
+  private readonly impl: Store = new SqliteStore();
 
   createRun(input: CreateRunInput): Run {
     return this.impl.createRun(input);
