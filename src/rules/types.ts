@@ -60,4 +60,6 @@ export interface CdContext {
   ciPassed: boolean;
   /** Evaluation instant (UTC). Defaults to now. Injectable for tests. */
   at?: Date;
+  /** Runtime freeze ranges (from the store), merged with rules.yaml freezes. */
+  extraFreezes?: string[];
 }

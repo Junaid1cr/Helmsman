@@ -1,9 +1,18 @@
 import { randomUUID } from 'node:crypto';
-import type { CreateRunInput, ListRunsFilter, Run, RunPatch, Store } from './types';
+import type {
+  CreateFreezeInput,
+  CreateRunInput,
+  Freeze,
+  ListRunsFilter,
+  Run,
+  RunPatch,
+  Store,
+} from './types';
 
 /** In-memory Store for tests and pre-SQLite development. Not durable. */
 export class MemoryStore implements Store {
   private readonly runs = new Map<string, Run>();
+  private readonly freezes = new Map<string, Freeze>();
 
   createRun(input: CreateRunInput): Run {
     const run: Run = {
@@ -38,5 +47,23 @@ export class MemoryStore implements Store {
     if (filter.branch) out = out.filter((r) => r.branch === filter.branch);
     if (filter.limit !== undefined) out = out.slice(0, filter.limit);
     return out.map((r) => ({ ...r }));
+  }
+
+  createFreeze(input: CreateFreezeInput): Freeze {
+    const freeze: Freeze = {
+      id: randomUUID(),
+      createdAt: new Date().toISOString(),
+      ...input,
+    };
+    this.freezes.set(freeze.id, freeze);
+    return { ...freeze };
+  }
+
+  listFreezes(): Freeze[] {
+    return [...this.freezes.values()].reverse().map((f) => ({ ...f }));
+  }
+
+  deleteFreeze(id: string): boolean {
+    return this.freezes.delete(id);
   }
 }

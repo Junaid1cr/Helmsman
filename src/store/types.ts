@@ -49,6 +49,19 @@ export interface ListRunsFilter {
   limit?: number;
 }
 
+/** A runtime deploy freeze (set via the API/MCP, distinct from rules.yaml). */
+export interface Freeze {
+  id: string;
+  range: string; // "YYYY-MM-DD..YYYY-MM-DD" or a single "YYYY-MM-DD"
+  reason?: string;
+  createdAt: string; // ISO UTC
+}
+
+export interface CreateFreezeInput {
+  range: string;
+  reason?: string;
+}
+
 /**
  * Persistence boundary for run history. MemoryStore implements it now; a
  * better-sqlite3 implementation replaces it at step 6 with no runner changes.
@@ -58,4 +71,8 @@ export interface Store {
   updateRun(id: string, patch: RunPatch): Run;
   getRun(id: string): Run | undefined;
   listRuns(filter?: ListRunsFilter): Run[];
+
+  createFreeze(input: CreateFreezeInput): Freeze;
+  listFreezes(): Freeze[];
+  deleteFreeze(id: string): boolean;
 }

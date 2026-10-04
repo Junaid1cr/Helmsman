@@ -38,7 +38,8 @@ export class DeployerService {
 
   /** Evaluate CD gates and, if clear, deploy in the background. */
   requestDeploy(event: PipelineEvent, ciPassed: boolean): DeployAck {
-    const decision = this.rules.evaluateCd(event, { ciPassed, at: new Date() });
+    const extraFreezes = this.store.listFreezes().map((f) => f.range);
+    const decision = this.rules.evaluateCd(event, { ciPassed, at: new Date(), extraFreezes });
     const run = this.cd.createCdRun(event, decision);
 
     if (decision.outcome === 'deploy') {

@@ -62,6 +62,19 @@ describe('SqliteStore', () => {
     expect(s.listRuns({ limit: 2 }).map((r) => r.id)).toEqual([c.id, b.id]);
   });
 
+  it('creates, lists, and deletes freezes', () => {
+    const s = new SqliteStore(':memory:');
+    const f1 = s.createFreeze({ range: '2026-10-20..2026-10-23', reason: 'release week' });
+    const f2 = s.createFreeze({ range: '2026-12-25' });
+
+    expect(s.listFreezes().map((f) => f.id)).toEqual([f2.id, f1.id]); // newest first
+    expect(s.listFreezes().find((f) => f.id === f1.id)?.reason).toBe('release week');
+
+    expect(s.deleteFreeze(f1.id)).toBe(true);
+    expect(s.deleteFreeze(f1.id)).toBe(false); // already gone
+    expect(s.listFreezes().map((f) => f.id)).toEqual([f2.id]);
+  });
+
   it('persists across store instances (same file)', () => {
     const path = `${process.cwd()}/node_modules/.cache/helmsman-test-${Date.now()}.sqlite`;
     const s1 = new SqliteStore(path);

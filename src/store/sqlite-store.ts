@@ -3,7 +3,9 @@ import { randomUUID } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import type {
+  CreateFreezeInput,
   CreateRunInput,
+  Freeze,
   ListRunsFilter,
   Run,
   RunKind,
@@ -66,6 +68,14 @@ export class SqliteStore implements Store {
       CREATE INDEX IF NOT EXISTS idx_runs_kind ON runs(kind);
       CREATE INDEX IF NOT EXISTS idx_runs_status ON runs(status);
       CREATE INDEX IF NOT EXISTS idx_runs_branch ON runs(branch);
+
+      CREATE TABLE IF NOT EXISTS freezes (
+        seq         INTEGER PRIMARY KEY AUTOINCREMENT,
+        id          TEXT UNIQUE NOT NULL,
+        range_spec  TEXT NOT NULL,
+        reason      TEXT,
+        created_at  TEXT NOT NULL
+      );
     `);
   }
 
@@ -130,6 +140,44 @@ export class SqliteStore implements Store {
     const stmt = this.db.prepare(sql);
     const rows = (Object.keys(params).length ? stmt.all(params) : stmt.all()) as Row[];
     return rows.map(rowToRun);
+  }
+
+  createFreeze(input: CreateFreezeInput): Freeze {
+    const freeze: Freeze = {
+      id: randomUUID(),
+      createdAt: new Date().toISOString(),
+      ...input,
+    };
+    this.db
+      .prepare(
+        'INSERT INTO freezes (id, range_spec, reason, created_at) VALUES (@id, @range, @reason, @createdAt)',
+      )
+      .run({
+        id: freeze.id,
+        range: freeze.range,
+        reason: freeze.reason ?? null,
+        createdAt: freeze.createdAt,
+      });
+    return freeze;
+  }
+
+  listFreezes(): Freeze[] {
+    const rows = this.db.prepare('SELECT * FROM freezes ORDER BY seq DESC').all() as {
+      id: string;
+      range_spec: string;
+      reason: string | null;
+      created_at: string;
+    }[];
+    return rows.map((r) => ({
+      id: r.id,
+      range: r.range_spec,
+      reason: r.reason ?? undefined,
+      createdAt: r.created_at,
+    }));
+  }
+
+  deleteFreeze(id: string): boolean {
+    return this.db.prepare('DELETE FROM freezes WHERE id = ?').run(id).changes > 0;
   }
 
   close(): void {

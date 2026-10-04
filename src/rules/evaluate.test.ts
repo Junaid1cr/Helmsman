@@ -108,6 +108,18 @@ describe('evaluateCd', () => {
     expect(r.reason).toMatch(/outside deploy window/);
   });
 
+  it('blocks on a runtime (extra) freeze not in rules.yaml', () => {
+    // Oct 5 2026 (Mon) 12:00 IST — inside window, no static freeze — but a
+    // runtime freeze covers it.
+    const r = evaluateCd(event(), rules, {
+      ciPassed: true,
+      at: INSIDE_WINDOW,
+      extraFreezes: ['2026-10-05'],
+    });
+    expect(r.outcome).toBe('blocked');
+    expect(r.reason).toMatch(/frozen/);
+  });
+
   it('freeze takes precedence over window (reports frozen)', () => {
     // Oct 21 2026 is a Wednesday inside the window AND inside the freeze.
     const r = evaluateCd(event(), rules, { ciPassed: true, at: new Date('2026-10-21T06:30:00Z') });

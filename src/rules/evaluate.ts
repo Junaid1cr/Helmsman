@@ -67,7 +67,8 @@ export function evaluateCd(
     return { outcome: 'blocked', reason: 'cd.require is ci_passed but CI has not passed' };
   }
 
-  const freeze = activeFreeze(at, cd.freeze);
+  const freezes = [...(cd.freeze ?? []), ...(ctx.extraFreezes ?? [])];
+  const freeze = activeFreeze(at, freezes);
   if (freeze) {
     return { outcome: 'blocked', reason: `deploy frozen (${freeze})` };
   }

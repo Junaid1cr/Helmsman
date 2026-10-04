@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "helmsman": {
+      "command": "npx",
+      "args": ["ts-node", "src/mcp/server.ts"],
+      "env": {
+        "HELMSMAN_API_URL": "http://localhost:4000/api/v1"
+      }
+    }
+  }
+}

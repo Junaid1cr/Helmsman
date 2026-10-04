@@ -7,11 +7,13 @@
     "build": "tsc",
     "start": "node dist/main.js",
     "start:dev": "ts-node src/main.ts",
+    "mcp": "ts-node src/mcp/server.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "dependencies": {
     "@kubernetes/client-node": "^1.0.0",
+    "@modelcontextprotocol/sdk": "^1.32.0",
     "@nestjs/common": "^11.0.0",
     "@nestjs/core": "^11.0.0",
     "@nestjs/platform-express": "^11.0.0",
