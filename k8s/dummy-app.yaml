@@ -1,0 +1,67 @@
+# The application Helmsman deploys. For the step-1 bootstrap we ship a fixed
+# tag ("bootstrap"); from step 5 onward the CD deployer patches the image tag
+# and APP_VERSION to the commit SHA being deployed.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dummy-app
+  labels:
+    app: dummy-app
+    app.kubernetes.io/managed-by: helmsman
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: dummy-app
+  template:
+    metadata:
+      labels:
+        app: dummy-app
+        app.kubernetes.io/managed-by: helmsman
+    spec:
+      containers:
+        - name: dummy-app
+          image: localhost:5001/dummy-app:bootstrap
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          env:
+            # Kept in sync with the image tag by the deployer.
+            - name: APP_VERSION
+              value: "bootstrap"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dummy-app
+  labels:
+    app: dummy-app
+    app.kubernetes.io/managed-by: helmsman
+spec:
+  type: ClusterIP
+  selector:
+    app: dummy-app
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000

@@ -1,0 +1,10 @@
+ci:
+  on: [push, pull_request]
+  paths: ["src/**", "Dockerfile"]
+  skip_if_commit_contains: "[skip ci]"
+cd:
+  branches: [main]
+  require: ci_passed
+  windows: "Mon-Thu 10:00-17:00 IST"
+  freeze: ["2026-10-20..2026-10-23"]
+  approval: manual
