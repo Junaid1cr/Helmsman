@@ -5,7 +5,7 @@ import { loadRules, RulesConfigError } from './config';
 
 describe('loadRules', () => {
   it('parses the repo rules.yaml into camelCase config', () => {
-    const text = readFileSync(join(__dirname, '../../../rules.yaml'), 'utf8');
+    const text = readFileSync(join(__dirname, '../../rules.yaml'), 'utf8');
     const cfg = loadRules(text);
 
     expect(cfg.ci.on).toEqual(['push', 'pull_request']);

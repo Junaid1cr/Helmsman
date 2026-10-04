@@ -28,6 +28,7 @@ export class CiRunner {
     this.ttl = opts.ttlSecondsAfterFinished ?? 1800;
   }
 
+  /** Create a queued CI run record and execute it to completion. */
   async run(event: PipelineEvent): Promise<CiRunResult> {
     const run = this.store.createRun({
       kind: 'ci',
@@ -37,10 +38,18 @@ export class CiRunner {
       commit: event.commit,
       message: event.message,
     });
+    return this.execute(run.id, event);
+  }
 
-    const jobName = jobNameForRun(run.id);
+  /**
+   * Execute an already-created run: create the Job, poll it, record the result.
+   * Lets callers (the HTTP layer) create the run, return its id, then run this
+   * in the background.
+   */
+  async execute(runId: string, event: PipelineEvent): Promise<CiRunResult> {
+    const jobName = jobNameForRun(runId);
     const manifest = buildCiJob({
-      runId: run.id,
+      runId,
       repoUrl: event.repo,
       commit: event.commit,
       branch: event.branch,
@@ -51,7 +60,7 @@ export class CiRunner {
     });
 
     const startedAt = new Date();
-    this.store.updateRun(run.id, {
+    this.store.updateRun(runId, {
       status: 'running',
       jobName,
       startedAt: startedAt.toISOString(),
@@ -61,12 +70,12 @@ export class CiRunner {
       await this.k8s.createJob(this.ns, manifest);
     } catch (e) {
       const reason = `failed to create job: ${(e as Error).message}`;
-      this.store.updateRun(run.id, {
+      this.store.updateRun(runId, {
         status: 'failed',
         reason,
         finishedAt: new Date().toISOString(),
       });
-      return { runId: run.id, status: 'failed', jobName, logs: reason, durationMs: 0 };
+      return { runId, status: 'failed', jobName, logs: reason, durationMs: 0 };
     }
 
     const status = await this.waitForJob(jobName);
@@ -74,7 +83,7 @@ export class CiRunner {
     const durationMs = finishedAt.getTime() - startedAt.getTime();
     const logs = await this.safeLogs(jobName);
 
-    this.store.updateRun(run.id, {
+    this.store.updateRun(runId, {
       status,
       logs,
       finishedAt: finishedAt.toISOString(),
@@ -85,7 +94,7 @@ export class CiRunner {
           : undefined,
     });
 
-    return { runId: run.id, status, jobName, logs, durationMs };
+    return { runId, status, jobName, logs, durationMs };
   }
 
   /**

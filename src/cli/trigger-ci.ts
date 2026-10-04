@@ -8,10 +8,10 @@
  * Runs a real CI Job against the current kubeconfig context, polls to
  * completion, prints logs, and exits non-zero if CI did not pass.
  */
-import { CiRunner } from '../pipeline/runner/ci-runner';
-import { KubeJobApi } from '../pipeline/runner/k8s';
-import { MemoryStore } from '../pipeline/store/memory-store';
-import type { PipelineEvent } from '../pipeline/rules/types';
+import { CiRunner } from '../runner/ci-runner';
+import { KubeJobApi } from '../runner/k8s';
+import { MemoryStore } from '../store/memory-store';
+import type { PipelineEvent } from '../rules/types';
 
 function arg(name: string, fallback?: string): string | undefined {
   const i = process.argv.indexOf(`--${name}`);
