@@ -1,0 +1,44 @@
+# RBAC for the Helmsman control plane when it runs INSIDE the cluster.
+# Not needed for local host-based dev (your kubeconfig is cluster-admin), but
+# required once the pipeline service is containerized and uses this SA.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: helmsman
+  namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: helmsman
+  namespace: default
+rules:
+  # CI: create and manage one-shot Jobs
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["create", "get", "list", "watch", "delete"]
+  # CI: read Job pods and their logs
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods/log"]
+    verbs: ["get"]
+  # CD (step 5): update the dummy-app Deployment image
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: helmsman
+  namespace: default
+subjects:
+  - kind: ServiceAccount
+    name: helmsman
+    namespace: default
+roleRef:
+  kind: Role
+  name: helmsman
+  apiGroup: rbac.authorization.k8s.io

@@ -9,6 +9,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@kubernetes/client-node": "^1.0.0",
     "dayjs": "^1.11.13",
     "js-yaml": "^4.1.0",
     "picomatch": "^4.0.2",
